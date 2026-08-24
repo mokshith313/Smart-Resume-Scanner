@@ -1,0 +1,16 @@
+Bob Johnson
+Email: bob.j@designstudio.org
+
+SUMMARY
+Frontend UI Developer with 2 years of experience crafting responsive web apps using HTML5, CSS3, React, and JavaScript.
+
+WORK EXPERIENCE
+Frontend Developer | WebCraft Studio (2022 - Present)
+- Designed user interfaces in React.js and CSS.
+- Collaborated with designers to deliver responsive web applications.
+
+SKILLS
+React, JavaScript, HTML5, CSS3, Vue.js, UI/UX Design, Figma
+
+EDUCATION
+B.A. in Visual Design | New York University (2022)

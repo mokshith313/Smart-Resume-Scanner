@@ -1,0 +1,16 @@
+Alice Smith
+Email: alice.smith@datapipeline.io
+
+SUMMARY
+Data Engineer with 3 years of experience in Python, Apache Spark, and SQL database pipelines. Interested in transitioning into backend API engineering.
+
+EXPERIENCE
+Data Engineer | BigData Corp (2021 - Present)
+- Built ETL pipelines using Python, SQL, and PostgreSQL.
+- Utilized Docker for local data pipeline orchestration and Git for version control.
+
+SKILLS
+Python, SQL, PostgreSQL, Docker, Git, Pandas, PySpark, Data Pipelines
+
+EDUCATION
+M.S. in Data Analytics | UC Berkeley (2021)

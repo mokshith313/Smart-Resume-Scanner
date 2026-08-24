@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Resume Screener - AI Match Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="bg-light">
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+                <i class="bi bi-file-earmark-person-fill text-primary fs-4"></i>
+                Smart Resume Screener <span class="badge bg-primary fs-7 rounded-pill ms-2">v1.0</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                    <i class="bi bi-cpu me-1"></i> AI Matcher Ready
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Top Metrics Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">ACTIVE JOB ROLE</div>
+                            <div class="fs-5 fw-bold text-dark text-truncate" id="metricActiveJob">None Selected</div>
+                        </div>
+                        <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                            <i class="bi bi-briefcase-fill fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">SCREENED RESUMES</div>
+                            <div class="fs-4 fw-bold text-dark" id="metricTotalScreened">0</div>
+                        </div>
+                        <div class="bg-info-subtle text-info p-3 rounded-circle">
+                            <i class="bi bi-people-fill fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">TOP MATCH SCORE</div>
+                            <div class="fs-4 fw-bold text-success" id="metricTopScore">0.0 / 10</div>
+                        </div>
+                        <div class="bg-success-subtle text-success p-3 rounded-circle">
+                            <i class="bi bi-trophy-fill fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold">AVG FIT SCORE</div>
+                            <div class="fs-4 fw-bold text-primary" id="metricAvgScore">0.0 / 10</div>
+                        </div>
+                        <div class="bg-warning-subtle text-warning p-3 rounded-circle">
+                            <i class="bi bi-graph-up-arrow fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <!-- Left Column: Job Description & File Upload -->
+            <div class="col-lg-5">
+                
+                <!-- Card 1: Job Description Input -->
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-white border-0 pt-3 px-4 d-flex align-items-center justify-content-between">
+                        <h6 class="fw-bold m-0 text-dark">
+                            <i class="bi bi-1-circle-fill text-primary me-2"></i>Target Job Description
+                        </h6>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="loadSampleJD('backend')">
+                            <i class="bi bi-magic me-1"></i>Sample JD
+                        </button>
+                    </div>
+                    <div class="card-body px-4">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Job Title</label>
+                            <input type="text" id="jdTitle" class="form-control" placeholder="e.g. Senior Backend Engineer">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Company</label>
+                            <input type="text" id="jdCompany" class="form-control" placeholder="e.g. Acme Tech Solutions">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-semibold">Job Requirements & Details</label>
+                            <textarea id="jdText" class="form-control" rows="5" placeholder="Paste key responsibilities, required skills, and qualification requirements..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button id="btnSaveJD" class="btn btn-primary w-100 fw-semibold" onclick="saveJobDescription()">
+                                <i class="bi bi-check-circle me-1"></i>Save Job Description
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Batch Resume Upload -->
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white border-0 pt-3 px-4">
+                        <h6 class="fw-bold m-0 text-dark">
+                            <i class="bi bi-2-circle-fill text-primary me-2"></i>Upload Candidate Resumes
+                        </h6>
+                    </div>
+                    <div class="card-body px-4">
+                        <div id="dropZone" class="upload-dropzone p-4 text-center rounded-3 mb-3 border border-2 border-dashed">
+                            <i class="bi bi-cloud-arrow-up-fill display-5 text-primary"></i>
+                            <div class="fw-semibold mt-2">Drag & Drop Resumes Here</div>
+                            <div class="text-muted small">Supports PDF and TXT files (Batch uploads supported)</div>
+                            <input type="file" id="fileInput" multiple accept=".pdf,.txt" class="d-none">
+                            <button class="btn btn-sm btn-outline-primary mt-3 px-3 rounded-pill" onclick="document.getElementById('fileInput').click()">
+                                Select Files
+                            </button>
+                        </div>
+
+                        <!-- Selected files queue -->
+                        <div id="fileList" class="mb-3 small"></div>
+
+                        <button id="btnScreen" class="btn btn-success w-100 py-2 fw-bold" onclick="uploadAndScreenResumes()" disabled>
+                            <i class="bi bi-play-circle-fill me-2"></i>Run AI Resume Screener
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Candidate Shortlist & Match Rationale -->
+            <div class="col-lg-7">
+                
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white border-0 pt-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <h6 class="fw-bold m-0 text-dark">
+                            <i class="bi bi-trophy-fill text-warning me-2"></i>Candidate Fit Leaderboard
+                        </h6>
+
+                        <!-- Filter Controls -->
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="text" id="searchFilter" class="form-control form-control-sm" placeholder="Search name or skill..." oninput="filterShortlist()">
+                            <select id="scoreFilter" class="form-select form-select-sm" style="width: 140px;" onchange="filterShortlist()">
+                                <option value="0">All Scores</option>
+                                <option value="8">8.0+ High Fit</option>
+                                <option value="6">6.0+ Medium Fit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 pt-2">
+                        <!-- Shortlist Loading Spinner -->
+                        <div id="screeningSpinner" class="text-center py-5 d-none">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                            <div class="fw-bold mt-3 text-dark">Analyzing Resumes & Computing Semantic Scores...</div>
+                            <div class="text-muted small">Parsing skills, matching experience, generating score justifications</div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="emptyState" class="text-center py-5">
+                            <i class="bi bi-card-checklist display-3 text-muted"></i>
+                            <h6 class="fw-semibold mt-3 text-secondary">No candidates screened yet</h6>
+                            <p class="text-muted small max-w-400 mx-auto">Save a Job Description on the left, upload candidate PDF/TXT resumes, and click 'Run AI Resume Screener' to view ranked results.</p>
+                        </div>
+
+                        <!-- Shortlist Candidate Cards List -->
+                        <div id="candidateList" class="d-flex flex-column gap-3"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Candidate Score Detail Modal -->
+    <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="modalCandidateName">Candidate Evaluation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="modalBodyContent">
+                    <!-- Dynamic modal content -->
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary fw-semibold px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

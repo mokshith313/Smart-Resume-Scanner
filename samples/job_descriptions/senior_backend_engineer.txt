@@ -1,0 +1,17 @@
+Title: Senior Backend Engineer
+Company: CloudScale Systems
+
+Job Overview:
+We are looking for a Senior Backend Engineer to join our high-scale cloud platform engineering team. You will be responsible for building robust REST microservices, optimizing database queries, and maintaining containerized deployment pipelines.
+
+Key Responsibilities:
+- Design and develop scalable backend APIs using Python and FastAPI / Flask.
+- Manage and optimize PostgreSQL and Redis datastores.
+- Containerize application workloads using Docker and deploy on AWS / Kubernetes.
+- Collaborate with frontend engineers and maintain CI/CD automation pipelines.
+
+Requirements & Qualifications:
+- 4+ years of hands-on experience in Python backend development.
+- Strong proficiency with SQL databases (PostgreSQL), Docker, and REST APIs.
+- Experience with Cloud Platforms (AWS or GCP) and Git version control.
+- Bachelor's degree in Computer Science or Software Engineering.

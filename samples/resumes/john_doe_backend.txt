@@ -1,0 +1,23 @@
+John Doe
+Email: john.doe@email.com
+Phone: (555) 123-4567
+
+PROFESSIONAL SUMMARY
+Senior Backend Engineer with 5+ years of experience designing scalable microservices in Python, FastAPI, and PostgreSQL. Proven track record in Docker containerization, AWS cloud deployments, and CI/CD pipelines.
+
+WORK EXPERIENCE
+Senior Backend Developer | TechCorp Inc. (2021 - Present)
+- Developed and maintained 15+ FastAPI REST microservices serving 2M daily active users.
+- Optimized PostgreSQL database queries, reducing API latency by 45%.
+- Implemented Docker containerization and automated deployments using Git and AWS.
+
+Software Engineer | CodeLabs Solutions (2019 - 2021)
+- Built Python and Flask backend services for enterprise e-commerce platform.
+- Managed Redis caching layers and REST API endpoints.
+
+SKILLS
+Technical Skills: Python, FastAPI, Flask, PostgreSQL, SQL, Docker, Redis, REST API, Git, AWS, CI/CD, Microservices
+Soft Skills: Leadership, Problem Solving, Agile, Communication
+
+EDUCATION
+B.S. in Computer Science | Stanford University (2019)

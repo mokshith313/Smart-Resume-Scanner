@@ -1,0 +1,15 @@
+Title: Lead Data Scientist
+Company: Insight AI
+
+Job Overview:
+Insight AI is seeking a Lead Data Scientist to drive machine learning model development, natural language processing pipelines, and data analytics architectures.
+
+Key Responsibilities:
+- Build, evaluate, and deploy Machine Learning and NLP models in Python.
+- Analyze large datasets using PyTorch, TensorFlow, Pandas, and Scikit-Learn.
+- Build automated feature engineering and model scoring pipelines on AWS.
+
+Requirements & Qualifications:
+- Master's or PhD in Data Science, Computer Science, or Statistics.
+- 5+ years of ML modeling experience in Python, PyTorch, SQL, and NLP.
+- Strong background in data modeling and statistics.
