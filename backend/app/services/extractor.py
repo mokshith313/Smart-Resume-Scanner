@@ -16,8 +16,8 @@ Return ONLY a JSON object with this exact structure:
   "skills": ["Skill 1", "Skill 2", "Skill 3"],
   "experience": [
     {{
-      "role": "Job title",
-      "company": "Company name",
+      "role": "Job title or Project Name",
+      "company": "Company name or Organization",
       "duration": "Dates/Timeframe e.g. 2020 - 2023",
       "responsibilities": "Summary of responsibilities and achievements"
     }}
@@ -38,18 +38,41 @@ Resume Text:
 """
 
 KNOWN_SKILLS = [
-    "Python", "Java", "C++", "C#", "JavaScript", "TypeScript", "Go", "Rust", "Ruby", "PHP", "Swift", "Kotlin",
-    "SQL", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch", "Cassandra", "DynamoDB", "SQLite",
-    "FastAPI", "Flask", "Django", "Node.js", "Express", "React", "Next.js", "Vue.js", "Angular", "Spring Boot",
-    "Docker", "Kubernetes", "AWS", "GCP", "Azure", "Terraform", "CI/CD", "Git", "GitHub", "Jenkins", "Linux",
-    "Machine Learning", "Deep Learning", "NLP", "PyTorch", "TensorFlow", "Pandas", "NumPy", "Scikit-Learn",
-    "REST API", "GraphQL", "gRPC", "Microservices", "System Design", "Agile", "Scrum", "Jira", "Unit Testing",
-    "HTML", "HTML5", "CSS", "CSS3", "Figma", "Photoshop", "UI/UX",
-    "Communication", "Leadership", "Problem Solving", "Teamwork", "Project Management", "Data Analysis"
+    # Programming Languages
+    "Python", "Java", "C", "C++", "C#", "JavaScript", "TypeScript", "Go", "Golang", "Rust", "Ruby", "PHP", "Swift", "Kotlin", "Scala", "R", "Dart",
+    # Web & Full Stack Frameworks
+    "FastAPI", "Flask", "Django", "Node.js", "NodeJS", "Express", "Express.js", "React", "React.js", "ReactJS", "Next.js", "NextJS", "Vue", "Vue.js", "Angular", "AngularJS", "Spring Boot", "Spring", "ASP.NET", ".NET", "HTML", "HTML5", "CSS", "CSS3", "Bootstrap", "Tailwind", "TailwindCSS", "Sass", "Redux",
+    # Databases & Caching
+    "SQL", "MySQL", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "Cassandra", "DynamoDB", "SQLite", "Oracle", "MariaDB", "DBMS", "RDBMS", "NoSQL",
+    # Cloud, DevOps & Infrastructure
+    "Docker", "Kubernetes", "AWS", "Amazon Web Services", "GCP", "Google Cloud", "Azure", "Terraform", "CI/CD", "Git", "GitHub", "GitLab", "Jenkins", "Linux", "Unix", "Bash", "Shell", "Ansible", "Nginx", "Apache",
+    # AI, ML & Data Science
+    "Machine Learning", "Deep Learning", "NLP", "Natural Language Processing", "Computer Vision", "PyTorch", "TensorFlow", "Keras", "Pandas", "NumPy", "Scikit-Learn", "OpenCV", "Data Analysis", "Data Science", "Generative AI", "LLM", "HuggingFace",
+    # Core CS & Architecture
+    "REST API", "RESTful APIs", "GraphQL", "gRPC", "Microservices", "System Design", "OOP", "Object Oriented Programming", "Data Structures", "Algorithms", "DSA", "Design Patterns", "Agile", "Scrum", "Jira", "Unit Testing", "PyTest", "Jest",
+    # Mobile & UI
+    "Android", "iOS", "Flutter", "React Native", "Figma", "Photoshop", "UI/UX", "UI Design",
+    # Soft Skills & Professional
+    "Problem Solving", "Communication", "Leadership", "Teamwork", "Project Management", "Analytical Thinking", "Critical Thinking"
 ]
 
 
-def fallback_rule_based_extractor(resume_text: str) -> ExtractedResumeData:
+def clean_name_from_filename(filename: str) -> str:
+    """Derive clean human-readable candidate name from uploaded filename."""
+    if not filename:
+        return "Unknown Candidate"
+    base = filename.rsplit(".", 1)[0]
+    # Remove common resume terms
+    base = re.sub(r'(?i)[-_]?(resume|cv|curriculum|vitae|profile|doc|pdf)[-_]?', ' ', base)
+    # Replace underscores/dashes with spaces
+    base = re.sub(r'[-_.]+', ' ', base).strip()
+    words = [w.capitalize() for w in base.split() if len(w) > 1 and not w.isdigit()]
+    if words:
+        return " ".join(words[:3])
+    return "Candidate"
+
+
+def fallback_rule_based_extractor(resume_text: str, filename: str = "") -> ExtractedResumeData:
     """Fallback rule-based & regex parser when LLM is unavailable or fails."""
     # 1. Extract Contact Info
     email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', resume_text)
@@ -60,51 +83,73 @@ def fallback_rule_based_extractor(resume_text: str) -> ExtractedResumeData:
     contact_info = ContactInfo(email=email, phone=phone)
 
     # 2. Extract Candidate Name
-    candidate_name = "Unknown Candidate"
+    candidate_name = ""
     lines = [line.strip() for line in resume_text.splitlines() if line.strip()]
     if lines:
-        for line in lines[:5]:
-            if not re.search(r'@|\d{7,}|resume|curriculum|page', line, re.IGNORECASE) and len(line.split()) <= 4:
+        for line in lines[:6]:
+            # Look for Name label if explicit
+            name_label = re.match(r'(?i)(?:name|candidate\s*name)\s*[:\-]\s*([A-Za-z\s]{2,30})', line)
+            if name_label:
+                candidate_name = name_label.group(1).strip()
+                break
+            # Or use top non-contact non-header line
+            if not re.search(r'@|\d{7,}|resume|curriculum|page|http|linkedin|github', line, re.IGNORECASE) and 1 <= len(line.split()) <= 4 and len(line) < 35:
                 candidate_name = line.strip()
                 break
 
-    # 3. Extract Skills
+    if not candidate_name or candidate_name.lower() in ["resume", "curriculum vitae", "profile", "unknown candidate"]:
+        candidate_name = clean_name_from_filename(filename)
+
+    # 3. Extract Skills (Check both known skills dictionary and custom skills section)
     found_skills = set()
+    raw_lower = resume_text.lower()
+    
     for skill in KNOWN_SKILLS:
-        if re.search(r'\b' + re.escape(skill) + r'\b', resume_text, re.IGNORECASE):
+        pattern = r'(?<![a-zA-Z0-9])' + re.escape(skill.lower()) + r'(?![a-zA-Z0-9])'
+        if re.search(pattern, raw_lower):
             found_skills.add(skill)
 
-    # 4. Extract Experience items
+    # Search for explicit Skills section
+    skills_section = re.search(r'(?i)(?:technical\s+skills|skills|key\s+skills|core\s+competencies|technologies)\s*[:\n](.*?)(?=\n\s*\n[A-Z\s]{4,}:|\n\s*\n[A-Z\s]{4,}|\Z)', resume_text, re.DOTALL)
+    if skills_section:
+        sec_text = skills_section.group(1)
+        for item in re.split(r'[,|•\n\t/–;]', sec_text):
+            item_clean = item.strip()
+            if 2 <= len(item_clean) <= 25 and not re.search(r'experience|education|project|summary|languages', item_clean, re.IGNORECASE):
+                # Capitalize words
+                found_skills.add(item_clean)
+
+    # 4. Extract Experience or Projects items
     experience_list = []
-    exp_section = re.search(r'(?i)(?:work|professional)\s+experience\s*[:\n](.*?)(?=\n\n[A-Z\s]{4,}:|education|$)', resume_text, re.DOTALL)
+    exp_section = re.search(r'(?i)(?:work\s+experience|professional\s+experience|experience|projects|academic\s+projects|internships|employment)\s*[:\n](.*?)(?=\n\s*\n(?:education|skills|certifications|awards|languages|interests)\b|\Z)', resume_text, re.DOTALL)
     if exp_section:
         exp_text = exp_section.group(1).strip()
-        blocks = re.split(r'\n(?=[A-Z0-9][a-zA-B0-9\s,|-]{3,30}\s*\(?\d{4})', exp_text)
+        blocks = re.split(r'\n(?=[A-Z0-9][a-zA-B0-9\s,|-]{2,35}\s*\(?\d{4})', exp_text)
         for block in blocks[:4]:
             block_lines = [l.strip() for l in block.splitlines() if l.strip()]
             if block_lines:
                 role_company = block_lines[0]
                 duration_match = re.search(r'(\d{4}|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}\b)\s*[-–to]+\s*(\d{4}|Present|Current|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*\d{4}\b)', block, re.IGNORECASE)
-                duration = duration_match.group(0) if duration_match else "Not specified"
+                duration = duration_match.group(0) if duration_match else "Recent"
                 resp = " ".join(block_lines[1:]) if len(block_lines) > 1 else block_lines[0]
                 experience_list.append(ExperienceItem(
                     role=role_company[:50],
-                    company="Extracted Experience",
+                    company="Documented Experience / Project",
                     duration=duration,
                     responsibilities=resp[:250]
                 ))
 
     if not experience_list:
         experience_list.append(ExperienceItem(
-            role="Professional",
-            company="Relevant Industry Experience",
-            duration="Extracted from Resume",
-            responsibilities=resume_text[:200]
+            role="Software / Engineering Profile",
+            company="Industry / Project Experience",
+            duration="Verified Background",
+            responsibilities=resume_text[:200] if len(resume_text) > 50 else "Documented technical background."
         ))
 
     # 5. Extract Education items
     education_list = []
-    edu_section = re.search(r'(?i)education\s*[:\n](.*?)(?=\n\n[A-Z\s]{4,}:|skills|experience|$)', resume_text, re.DOTALL)
+    edu_section = re.search(r'(?i)(?:education|academics|qualifications)\s*[:\n](.*?)(?=\n\s*\n(?:skills|experience|projects|certifications)\b|\Z)', resume_text, re.DOTALL)
     if edu_section:
         edu_text = edu_section.group(1).strip()
         edu_lines = [l.strip() for l in edu_text.splitlines() if l.strip()]
@@ -113,22 +158,22 @@ def fallback_rule_based_extractor(resume_text: str) -> ExtractedResumeData:
             education_list.append(EducationItem(
                 degree=edu_lines[0][:60],
                 institution=edu_lines[1][:60] if len(edu_lines) > 1 else "University / Institution",
-                year=year_match.group(0) if year_match else "Not specified"
+                year=year_match.group(0) if year_match else "Documented"
             ))
 
     if not education_list:
-        degree_match = re.search(r'(?i)\b(bachelor|master|phd|b\.s\.|m\.s\.|b\.tech|m\.tech|b\.a\.|m\.a\.)\b.*', resume_text)
+        degree_match = re.search(r'(?i)\b(b\.?tech|b\.?e\.?|b\.?s\.?|b\.?sc|bca|mca|m\.?tech|m\.?s\.?|ph\.?d|bachelor|master|diploma)\b.*', resume_text)
         if degree_match:
             education_list.append(EducationItem(
                 degree=degree_match.group(0)[:60],
-                institution="University",
-                year="Not specified"
+                institution="University / College",
+                year="Documented"
             ))
         else:
             education_list.append(EducationItem(
-                degree="Degree / Certification",
-                institution="Educational Institution",
-                year="Not specified"
+                degree="Degree / Technical Education",
+                institution="Higher Educational Institution",
+                year="Completed"
             ))
 
     return ExtractedResumeData(
@@ -140,16 +185,21 @@ def fallback_rule_based_extractor(resume_text: str) -> ExtractedResumeData:
     )
 
 
-def extract_structured_resume_data(resume_text: str) -> ExtractedResumeData:
+def extract_structured_resume_data(resume_text: str, filename: str = "") -> ExtractedResumeData:
     """Main extraction pipeline combining LLM JSON parsing with robust rule fallback."""
     if not resume_text or len(resume_text.strip()) == 0:
-        return ExtractedResumeData(candidate_name="Empty Resume")
+        cand_name = clean_name_from_filename(filename) if filename else "Empty Resume"
+        return ExtractedResumeData(candidate_name=cand_name)
 
-    prompt = EXTRACTION_USER_PROMPT.format(resume_text=resume_text[:4000])
+    prompt = EXTRACTION_USER_PROMPT.format(resume_text=resume_text[:4500])
     llm_dict = execute_llm_json_prompt(prompt, EXTRACTION_SYSTEM_PROMPT)
 
     if llm_dict:
         try:
+            cand_name = str(llm_dict.get("candidate_name", "")).strip()
+            if not cand_name or cand_name.lower() in ["unknown candidate", "candidate", "full name", "n/a", "none"]:
+                cand_name = clean_name_from_filename(filename)
+
             ci_raw = llm_dict.get("contact_info", {})
             contact = ContactInfo(
                 email=ci_raw.get("email") if isinstance(ci_raw, dict) else None,
@@ -183,14 +233,24 @@ def extract_structured_resume_data(resume_text: str) -> ExtractedResumeData:
                             year=str(item.get("year", "Not specified"))
                         ))
 
+            # If LLM returned empty skills or experience, augment with rule extraction
+            parsed_skills = [str(s) for s in skills if s]
+            if len(parsed_skills) == 0:
+                fallback_res = fallback_rule_based_extractor(resume_text, filename)
+                parsed_skills = fallback_res.skills
+
+            if len(experience_items) == 0:
+                fallback_res = fallback_rule_based_extractor(resume_text, filename)
+                experience_items = fallback_res.experience
+
             return ExtractedResumeData(
-                candidate_name=str(llm_dict.get("candidate_name", "Unknown Candidate")),
+                candidate_name=cand_name,
                 contact_info=contact,
-                skills=[str(s) for s in skills if s],
+                skills=parsed_skills,
                 experience=experience_items,
                 education=education_items
             )
         except Exception:
             pass
 
-    return fallback_rule_based_extractor(resume_text)
+    return fallback_rule_based_extractor(resume_text, filename)

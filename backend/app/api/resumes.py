@@ -4,7 +4,7 @@ from backend.app.db.database import get_db
 from backend.app.db.models import Resume
 from backend.app.schemas.schemas import ResumeResponse
 from backend.app.services.parser import parse_resume_file
-from backend.app.services.extractor import extract_structured_resume_data
+from backend.app.services.extractor import extract_structured_resume_data, clean_name_from_filename
 
 router = APIRouter(prefix="/resumes", tags=["Resumes"])
 
@@ -28,15 +28,15 @@ async def upload_resumes(
             content = await file.read()
             raw_text, file_type = parse_resume_file(filename, content)
             
-            # Extract structured candidate data
-            extracted = extract_structured_resume_data(raw_text)
+            # Extract structured candidate data with filename fallback
+            extracted = extract_structured_resume_data(raw_text, filename=filename)
             
             resume = Resume(
                 filename=filename,
                 file_type=file_type,
                 raw_text=raw_text,
                 candidate_name=extracted.candidate_name,
-                email=extracted.email,
+                email=extracted.contact_info.email if extracted.contact_info else None,
                 extracted_data=extracted.model_dump(),
                 extraction_status="success" if raw_text and not raw_text.startswith("[Note:") else "partial"
             )
@@ -44,12 +44,12 @@ async def upload_resumes(
             saved_resumes.append(resume)
 
         except Exception as err:
-            # Save error record gracefully
+            cand_name = clean_name_from_filename(filename)
             failed_resume = Resume(
                 filename=filename,
                 file_type="unknown",
                 raw_text=f"[Error parsing file: {str(err)}]",
-                candidate_name=filename.split(".")[0],
+                candidate_name=cand_name,
                 extracted_data=None,
                 extraction_status="failed"
             )

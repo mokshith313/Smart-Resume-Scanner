@@ -1,9 +1,7 @@
 import io
 import re
-import pdfplumber
 from pypdf import PdfReader
 from fastapi import HTTPException
-
 
 def clean_extracted_text(text: str) -> str:
     """Normalize extracted raw text by removing invalid characters and cleaning whitespace."""
@@ -21,21 +19,23 @@ def clean_extracted_text(text: str) -> str:
 
 
 def parse_pdf_file(file_content: bytes) -> str:
-    """Extract raw text from PDF byte content safely using pdfplumber with pypdf fallback."""
+    """
+    Extract raw text from PDF byte content using pdfplumber with pypdf fallback.
+    """
     extracted_text_chunks = []
-    
-    # 1. Primary Attempt: pdfplumber (Handles complex formatting & encodings best)
+
+    # 1. Try pdfplumber first for high-accuracy layout extraction
     try:
-        pdf_file = io.BytesIO(file_content)
-        with pdfplumber.open(pdf_file) as pdf:
+        import pdfplumber
+        with pdfplumber.open(io.BytesIO(file_content)) as pdf:
             for page in pdf.pages:
-                page_text = page.extract_text()
+                page_text = page.extract_text(layout=True) or page.extract_text()
                 if page_text:
                     extracted_text_chunks.append(page_text)
     except Exception:
         extracted_text_chunks = []
 
-    # 2. Fallback Attempt: pypdf (If pdfplumber returned no text)
+    # 2. Fallback to pypdf if pdfplumber extracted nothing or failed
     if not extracted_text_chunks:
         try:
             pdf_file = io.BytesIO(file_content)
@@ -53,7 +53,7 @@ def parse_pdf_file(file_content: bytes) -> str:
                     if page_text:
                         extracted_text_chunks.append(page_text)
                 except Exception:
-                    continue
+                    pass
         except Exception as e:
             if isinstance(e, ValueError):
                 raise
