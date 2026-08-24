@@ -11,7 +11,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000/api/v1")
+# 2. DYNAMIC BACKEND URL RESOLUTION
+render_url = "https://smart-resume-scanner-jrpd.onrender.com"  # <--- PASTE YOUR REAL RENDER URL HERE
+
+raw_backend_url = st.secrets.get("BACKEND_URL", os.getenv("BACKEND_URL", render_url)).rstrip('/')
+
+if not raw_backend_url.endswith("/api/v1"):
+    API_BASE_URL = f"{raw_backend_url}/api/v1"
+else:
+    API_BASE_URL = raw_backend_url
 
 # Sidebar Configuration
 st.sidebar.title("🎯 Smart Resume Screener")
